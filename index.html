@@ -3,80 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Game</title>
+    <title>Terrain Generation</title>
+    <link href="https://fonts.cdnfonts.com/css/minecraft" rel="stylesheet">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #2E7D38;
-        }
-        #terms, #game-options {
-            display: none;
+            font-family: Arial, sans-serif;
+            background-color: #87CEEB;
+            color: #000;
             text-align: center;
-            background-color: #ffffff;
-            border: 2px solid #000;
-            padding: 20px;
-            border-radius: 10px;
         }
-        button {
-            padding: 10px 20px;
-            margin: 10px;
-            cursor: pointer;
+        #terrain {
+            margin-top: 20px;
+            white-space: pre;
+            font-family: 'Minecraft', sans-serif;
         }
     </style>
 </head>
 <body>
 
-<div id="terms">
-    <h1>Terms of Service</h1>
-    <p>You must accept the terms of service to continue.</p>
-    <button id="accept">Accept</button>
-    <button id="decline">Decline</button>
-</div>
+    <h1>Terrain Generation Simulation</h1>
+    <div id="loading-screen" style="display: none;">
+        <h2>Loading Terrain...</h2>
+        <div class="tip" id="random-tip"></div>
+    </div>
+    <div id="terrain"></div>
+    <select id="gameModeSelector">
+        <option value="">Choose a game mode</option>
+        <option value="generate">Generate Terrain</option>
+    </select>
 
-<div id="game-options">
-    <h1>Choose Your Game Mode</h1>
-    <button onclick="startGame('creative')">Creative</button>
-    <button onclick="startGame('survival')">Survival</button>
-    <button onclick="startGame('hardcore')">Hardcore</button>
-    <button onclick="startGame('adventure')">Adventure</button>
-</div>
+    <script>
+        const tips = [
+            "Tip: Always carry a pickaxe!",
+            "Tip: Watch out for creepers!",
+            "Tip: Build a shelter at night.",
+            "Tip: Keep food in your inventory.",
+            "Tip: Water can help you in many situations."
+        ];
 
-<script>
-    // Check if the Terms of Service have been accepted
-    if (localStorage.getItem('tosAccepted')) {
-        document.getElementById('game-options').style.display = 'block';
-    } else {
-        document.getElementById('terms').style.display = 'block';
-    }
+        document.getElementById('gameModeSelector').addEventListener('change', function () {
+            if (this.value === 'generate') {
+                const loadingScreen = document.getElementById('loading-screen');
+                const randomTip = tips[Math.floor(Math.random() * tips.length)];
+                document.getElementById('random-tip').innerText = randomTip;
 
-    // Handle acceptance
-    document.getElementById('accept').onclick = function() {
-        localStorage.setItem('tosAccepted', true);
-        document.getElementById('terms').style.display = 'none';
-        document.getElementById('game-options').style.display = 'block';
-    }
+                // Show loading screen
+                loadingScreen.style.display = 'flex';
 
-    // Handle decline
-    document.getElementById('decline').onclick = function() {
-        alert('You must accept the terms to play.');
-        // Optional: You can redirect the user to another page or exit
-    }
+                // Simulate loading with a timeout
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    generateTerrain();
+                }, 2000);
+            }
+        });
 
-    // Function to simulate starting a game
-    function startGame(mode) {
-        // Here you can save the game mode or implement further functionality
-        localStorage.setItem('gameMode', mode);
-        alert('Starting game in ' + mode + ' mode!');
-        // You could add actual game setup code here
-    }
-</script>
+        function generateTerrain() {
+            const height = 20; // Landscape height
+            let terrain = '';
+
+            for (let y = height; y >= 0; y--) {
+                let layer = '';
+
+                if (y === height) {
+                    layer = 'Grass\n'; // Top layer is grass
+                } else if (y >= height - 3) {
+                    layer = 'Dirt\n'; // Next 3 layers are dirt
+                } else if (y > 8) {
+                    layer = getStoneLayer(y); // Stone layers
+                } else {
+                    layer = getDeepslateLayer(y); // Below Y=8
+                }
+
+                terrain += layer;
+            }
+
+            document.getElementById('terrain').innerText = terrain;
+        }
+
+        function getStoneLayer(y) {
+            // Random chance to spawn Andesite or Diorite between Y=9 and Y=8
+            const chance = Math.random();
+            if (chance < 0.1) {
+                return 'Andesite\n'; // 10% chance for Andesite
+            } else if (chance < 0.2) {
+                return 'Diorite\n'; // 10% chance for Diorite
+            }
+            return 'Stone\n'; // Default stone
+        }
+
+        function getDeepslateLayer(y) {
+            const ores = ['Deepslate', 'Deepslate', 'Deepslate']; // Base material
+
+            // Adding ores randomly below Y=8
+            switch (y) {
+                case 1: case 2:
+                    ores.push('Emerald Ore\n'); break; // Rare
+                case 3: case 4: case 5:
+                    ores.push('Diamond Ore\n'); break; // Rare
+                case 6: case 7:
+                    ores.push('Gold Ore\n'); break; // More common than diamonds
+                case 8:
+                    ores.push('Iron Ore\n'); break; // Most common
+            }
+
+            return ores[Math.floor(Math.random() * ores.length)]; // Randomly return a layer
+        }
+    </script>
 
 </body>
 </html>
